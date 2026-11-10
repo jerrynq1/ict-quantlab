@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080b12">
+  <meta name="description" content="ICT QuantLab — quantitative ICT research terminal">
+  <title>ICT QuantLab — Research Terminal</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script defer src="assets/js/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#overview" aria-label="ICT QuantLab Overview">
+        <span class="brand-mark">⌁</span><span><b>ICT <i>QuantLab</i></b><small>QUANTITATIVE RESEARCH</small></span>
+      </a>
+      <div class="nav-label">WORKSPACE</div>
+      <nav id="main-nav" class="main-nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">◫</span>Overview</button>
+        <button class="nav-item" data-view="data-center"><span class="nav-icon">▤</span>Data Center</button>
+        <div class="nav-label nav-label-spaced">CORE STATISTICS</div>
+        <button class="nav-item" data-view="gap"><span class="nav-icon">◇</span>Gap Statistics</button>
+        <button class="nav-item" data-view="liquidity"><span class="nav-icon">⌁</span>Liquidity</button>
+        <button class="nav-item" data-view="sessions"><span class="nav-icon">◷</span>Sessions</button>
+        <button class="nav-item" data-view="time"><span class="nav-icon">◴</span>Time Statistics</button>
+        <button class="nav-item" data-view="structure"><span class="nav-icon">⌗</span>Market Structure</button>
+        <button class="nav-item" data-view="daily-weekly"><span class="nav-icon">▥</span>Daily &amp; Weekly</button>
+        <button class="nav-item" data-view="liquidity-mss"><span class="nav-icon">⇢</span>Liquidity → MSS</button>
+        <div class="nav-label nav-label-spaced">FORECAST &amp; RESEARCH</div>
+        <button class="nav-item" data-view="forecast"><span class="nav-icon">✳</span>Forecast Lab<span class="nav-tag">HYBRID</span></button>
+        <button class="nav-item" data-view="research"><span class="nav-icon">⌘</span>Research &amp; Evaluation</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="integrity-box"><span class="integrity-dot"></span><div><b>Research integrity</b><small>No fabricated prices or forecasts.</small></div></div>
+        <div class="sidebar-version">ICT QUANTLAB <span>STATIC WEB EDITION</span></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="topbar-left"><button class="mobile-menu" id="mobile-menu" aria-label="Open navigation">☰</button><div class="breadcrumb">ICT QUANTLAB <span>/</span> <b id="breadcrumb-current">OVERVIEW</b></div></div>
+        <div class="topbar-right"><span class="timezone-pill">◷ NEW YORK TIME</span><span class="connection-pill" id="connection-pill"><span class="status-dot"></span><span id="connection-label">API NOT CONFIGURED</span></span><button class="icon-button" id="open-settings" title="Settings">⚙</button></div>
+      </header>
+
+      <div class="content-wrap">
+        <section class="global-toolbar" aria-label="Global filters">
+          <div class="toolbar-title">RESEARCH FILTERS</div>
+          <label>SYMBOL<select id="global-symbol" disabled><option>No symbols loaded</option></select></label>
+          <label>TIMEFRAME<select id="global-timeframe"><option>M1</option><option>M5</option><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></label>
+          <label>FROM<input id="date-from" type="date"></label>
+          <label>TO<input id="date-to" type="date"></label>
+          <button class="button button-quiet" id="apply-filters" disabled>Apply filters</button>
+        </section>
+
+        <div id="view-root" aria-live="polite"></div>
+        <footer class="page-footer"><span>ICT QUANTLAB · RESEARCH-FIRST PLATFORM</span><span>UTC STORAGE / NEW YORK DISPLAY · EST / EDT AWARE</span></footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal-card">
+      <button class="modal-close" data-close-modal aria-label="Close">×</button>
+      <div class="modal-kicker">PRIVATE WORKSPACE</div><h2 id="login-title">Backend sign in</h2>
+      <p class="muted">Đăng nhập vào API để lưu credentials cTrader an toàn ở server.</p>
+      <form id="login-form" class="form-stack">
+        <label>Username<input id="login-username" autocomplete="username" required value="admin"></label>
+        <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
+        <div class="form-error" id="login-error"></div>
+        <button class="button button-primary" type="submit" id="login-submit">Sign in to backend</button>
+      </form>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>
