@@ -1,49 +1,36 @@
-# Architecture and module contracts
+# Browser-only architecture
 
-## Separation of responsibilities
+## Runtime boundaries
 
-- `index.html`, `assets/styles.css`, `assets/app.js`: static user interface. No secrets and no server-side assumptions.
-- `apps/api/app/routers`: HTTP boundaries, validation and authorization.
-- `apps/api/app/services/ctrader.py`: OAuth token lifecycle and Spotware SDK transport.
-- `apps/api/app/services/cache.py`: per-run/account/symbol M1 interval cache.
-- `apps/api/app/engines`: pure deterministic research calculations.
-- SQLite: encrypted settings/tokens, auth sessions, forecast audit trail, research notes. Raw OHLC remains transient.
+- GitHub Pages serves only `index.html`, `assets/styles.css` and browser JavaScript.
+- `assets/ctrader-client.js` opens a secure JSON WebSocket to cTrader on port 5036. It performs app auth, lists accounts, account auth, symbol discovery and M1 historical requests.
+- `assets/research-engine.js` performs deterministic calculations on client-side OHLC arrays.
+- `assets/app.js` connects the UI and browser storage.
 
-## cTrader flow
+There is no login service, FastAPI, backend API, database, Worker or server-side secret store in this personal-use build.
 
-1. Admin saves Client ID, Client Secret, environment and the exact backend callback URI.
-2. Backend encrypts Client Secret and stores it. Public config only reports `secret_saved`.
-3. Backend creates a cryptographically random OAuth state, stores only its SHA-256 hash, and sends the user to cTrader authorization.
-4. Callback consumes the state exactly once, exchanges code server-side, encrypts access/refresh tokens, and redirects to the Pages URL.
-5. Backend authenticates the app, obtains cTrader account IDs, then performs selected-account authorization.
-6. Symbol discovery is dynamic. Historical M1 requests are fetched in bounded chunks.
+## cTrader request flow
 
-Use HTTPS for the backend and OAuth callback. cTrader authorization codes are short-lived, so exchange immediately. Token refresh must preserve the latest refresh token returned by cTrader.
+1. User manually enters Client ID, Client Secret, Access Token, optional Account ID and Demo/Live/Auto.
+2. Browser stores the fields in `localStorage`; this is plaintext and is suitable only for a trusted personal device.
+3. Browser opens `wss://demo.ctraderapi.com:5036` or `wss://live.ctraderapi.com:5036` and sends JSON messages using `{clientMsgId, payloadType, payload}`.
+4. Authenticate application (2100), list token-authorized accounts (2149), authorize selected account (2102), request symbol list (2114), request symbol metadata (2116), then retrieve M1 bars (2137).
+5. User manually replaces expired access tokens. The app does not perform OAuth code exchange or refresh-token lifecycle in this browser-only edition.
 
-## Historical trendbars
+## Historical M1 and cache
 
-A trendbar carries `low`, `deltaOpen`, `deltaClose`, `deltaHigh` and `utcTimestampInMinutes`. The adapter converts the relative deltas to absolute raw prices, then normalizes using the cTrader 1e5 price scale. Every decoded OHLC tuple is validated. If `high < max(open, close, low)` or `low > min(open, close, high)`, the candle is tagged `suspect_ohlc` and excluded from analytics, while raw high/low are preserved for inspection. Validate this conversion against the broker's symbol digits and representative chart prices before relying on the data for a particular instrument; price-basis differences must not be silently assumed.
+A trendbar contains `low`, `deltaOpen`, `deltaClose`, `deltaHigh` and `utcTimestampInMinutes`. Prices are reconstructed from `low` and deltas, divided by 100000 and rounded to symbol digits. Validate values against broker charts. The cache keeps a `Map` of candles and loaded time intervals per symbol in RAM. Range subtraction requests only missing intervals; OHLC is not persisted.
 
-Requests are chunked below the 10,000 trendbar count and rate-limited below 5 historical requests/second/connection. The requested range is recorded in cache only after a successful response.
+Historical requests use 24-hour chunks and are paced below five requests per second. A range is marked covered only after its request succeeds.
 
-## Cache contract
+## Research integrity
 
-Cache key: `browser_run_id : account_id : symbol_id : M1`.
+- All timestamps remain UTC in memory; New York wall time is derived with `America/New_York` and its daylight-saving rules.
+- Higher timeframes are aggregated from M1, and a bucket is accepted only with the expected number of constituent bars.
+- Confirmed pivots require right-side bars; their confirmation timestamp is distinct from the pivot candle.
+- Incomplete forward horizons are reported as censored and should not be treated as a negative outcome.
+- Advanced concepts that are not implemented in the current JavaScript engine must remain labelled as roadmap/heuristic, never as validated signal probabilities.
 
-A cache entry stores bars keyed by UTC open timestamp and successful queried half-open windows `[start_ms, end_ms)`. Failed windows are not stored. Empty successful windows are stored to avoid repeatedly asking for a no-data interval. The client run ID changes on page load; therefore a reload begins with an empty logical cache. Higher timeframes are derived on demand and do not need independent source caches.
+## Browser persistence and threat model
 
-## Time contract
-
-All bar timestamps are UTC milliseconds. Conversion to New York time happens at display/filter/session boundaries with IANA zone `America/New_York`, never a fixed UTC offset. Forex trading date defaults to 17:00 New York. Asia 20:00–00:00 is assigned to the same trading-date label as the following London and NY sessions. Session windows are workspace-configurable and validated for overlap.
-
-## Event and statistical contract
-
-Every detected event should carry a type, direction (where applicable), price/zone, event timestamp, bar timestamp, timeframe context and a mechanical definition. Pivot-based logic uses left/right confirmation bars; the event timestamp is the confirmation bar close, never backdated to the pivot.
-
-Historical conditional statistics use an explicit denominator and disclose sample count. Wilson 95% intervals are used for binomial proportions. Right-censored observations are excluded from completed-outcome rates. Same-bar TP/SL collisions are ambiguous with OHLC and are not counted as clean target wins. Repeated events within a day/session are dependent observations; do not interpret naive confidence intervals as independence-adjusted inference.
-
-## Forecast contract
-
-The active forecast baseline uses historical analogues that have completed their target horizon before the forecast as-of time. No bar after the as-of timestamp enters the forecast features/training sample. Output scenarios are mutually exclusive and sum to 100%; price outputs are empirical quantiles. Insufficient analog count means no probability is emitted. Future outcomes are scored only after a full horizon is present, using bars whose open timestamp is greater than or equal to the forecast as-of timestamp.
-
-Forecast audit rows survive OHLC cache reset. They contain the as-of time, symbol, model version, context hash, prediction payload and later outcome. This is distinct from permanent OHLC storage, which is intentionally disabled.
+Credentials, forecast audit records, research notes and session profiles are stored locally by origin. They survive reload but are readable to scripts running in that origin. An XSS vulnerability or browser extension can expose them. Do not share credentials, browser profiles or source commits. For multi-user or public use, move credentials to a proper backend/Worker with per-user OAuth and server-side secret handling.
