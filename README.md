@@ -34,9 +34,9 @@ Trong **Data Center → cTrader Open API** nhập:
 - **Client Secret**: Secret tương ứng của ứng dụng.
 - **Access Token**: access token đã được cấp quyền cho ứng dụng/tài khoản qua quy trình OAuth cTrader (có thể lấy từ công cụ OAuth/Playground phù hợp). Ứng dụng QuantLab hiện không tự mở luồng OAuth; người dùng dán token thủ công như trong form.
 - **Account ID**: tùy chọn; để trống sẽ chọn tài khoản đầu tiên mà token trả về.
-- **Environment**: Auto thử Demo rồi Live; hoặc chọn cố định Demo/Live.
+- **Environment**: Auto bắt đầu ở Live, lấy danh sách tài khoản từ Access Token, đọc `isLive`, rồi tự chuyển sang đúng máy chủ Demo/Live của tài khoản đã chọn. Có thể chọn Demo/Live thủ công làm máy chủ khởi đầu; tài khoản vẫn được xác định theo phản hồi account list.
 
-Nhấn **Lưu & kết nối**. Client thực hiện `ProtoOAApplicationAuthReq` (2100), lấy account list bằng `ProtoOAGetAccountListByAccessTokenReq` (2149), authorize tài khoản bằng `ProtoOAAccountAuthReq` (2102), lấy danh sách symbol (2114), sau đó yêu cầu historical trendbars M1 (2137). Kết nối dùng JSON qua `wss://demo.ctraderapi.com:5036` hoặc `wss://live.ctraderapi.com:5036`.
+Nhấn **Lưu & kết nối**. Với Auto, client mở `wss://live.ctraderapi.com:5036`, thực hiện `ProtoOAApplicationAuthReq` (2100), lấy account list bằng `ProtoOAGetAccountListByAccessTokenReq` (2149), đọc môi trường của tài khoản rồi chuyển sang `wss://demo.ctraderapi.com:5036` nếu tài khoản là Demo. Sau khi chuyển máy chủ, client bắt buộc xác thực ứng dụng lại trên socket mới, rồi mới authorize tài khoản bằng `ProtoOAAccountAuthReq` (2102), lấy danh sách symbol (2114) và yêu cầu historical trendbars M1 (2137). Mọi request có timeout, kiểm tra response payload type và hiển thị phase + close code/reason nếu máy chủ ngắt kết nối.
 
 Access Token cTrader có thời hạn mặc định khoảng 30 ngày. Khi token hết hạn, lấy/cấp token mới và dán lại vào form. Bản browser-only này chưa tự động refresh OAuth token; đây là lựa chọn có chủ đích để không cần backend/client secret exchange.
 

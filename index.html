@@ -7,7 +7,7 @@
   <meta name="description" content="ICT QuantLab — quantitative research, market statistics and hybrid forecasting.">
   <title>ICT QuantLab — Quantitative Research Terminal</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/styles.css?v=1.2.1">
 </head>
 <body>
   <div class="app-shell" id="appShell">
@@ -136,15 +136,15 @@
           <article class="panel deployment-panel"><div class="panel-header"><div><div class="eyebrow">DEPLOYMENT MAP</div><h2>Browser-only workspace</h2></div><span class="pill green-pill">NO BACKEND</span></div><div class="deployment-flow"><div><b>01</b><strong>GitHub Pages</strong><small>index.html · assets/*.css · assets/*.js</small><span class="pill green-pill">STATIC WEBSITE</span></div><i>→</i><div><b>02</b><strong>Your browser</strong><small>Credentials · RAM OHLC cache · ICT engines</small><span class="pill blue-pill">LOCAL PROCESSING</span></div><i>→</i><div><b>03</b><strong>cTrader Open API</strong><small>Secure WebSocket · JSON · Port 5036</small><span class="pill muted-pill">DIRECT CONNECTION</span></div></div><div class="callout warning-callout"><b>Personal-use security</b><span>Credentials are stored in this browser's localStorage in readable form. Use a trusted personal device and never publish real credentials in GitHub source.</span></div></article>
         </section>
       </div>
-      <footer class="app-footer"><span>ICT QUANTLAB <b>·</b> RESEARCH NOT EXECUTION</span><span>All displayed times: America/New_York <b>·</b> Source timestamps normalized to UTC</span><span id="footerVersion">v1.2.0 · Browser-only</span></footer>
+      <footer class="app-footer"><span>ICT QUANTLAB <b>·</b> RESEARCH NOT EXECUTION</span><span>All displayed times: America/New_York <b>·</b> Source timestamps normalized to UTC</span><span id="footerVersion">v1.2.1 · Browser-only</span></footer>
     </main>
   </div>
   <div class="modal hidden" id="recordModal" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle">
     <div class="modal-card panel"><div class="panel-header"><div><div class="eyebrow">EVENT AUDIT / RAW RECORD</div><h2 id="recordModalTitle">Research record</h2></div><button class="btn secondary small-btn" id="recordModalClose" type="button" aria-label="Close record details">Close ✕</button></div><pre id="recordModalBody" class="record-json"></pre></div>
   </div>
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
-  <script src="assets/ctrader-client.js" defer></script>
-  <script src="assets/research-engine.js" defer></script>
-  <script src="assets/app.js" defer></script>
+  <script src="assets/ctrader-client.js?v=1.2.1" defer></script>
+  <script src="assets/research-engine.js?v=1.2.1" defer></script>
+  <script src="assets/app.js?v=1.2.1" defer></script>
 </body>
 </html>
