@@ -3,76 +3,162 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080b12">
-  <meta name="description" content="ICT QuantLab — quantitative ICT research terminal">
-  <title>ICT QuantLab — Research Terminal</title>
+  <meta name="theme-color" content="#080d16">
+  <meta name="description" content="ICT QuantLab — quantitative research, market statistics and hybrid forecasting.">
+  <title>ICT QuantLab — Quantitative Research Terminal</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/css/styles.css">
-  <script defer src="assets/js/app.js"></script>
+  <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <a class="brand" href="#overview" aria-label="ICT QuantLab Overview">
-        <span class="brand-mark">⌁</span><span><b>ICT <i>QuantLab</i></b><small>QUANTITATIVE RESEARCH</small></span>
-      </a>
-      <div class="nav-label">WORKSPACE</div>
-      <nav id="main-nav" class="main-nav" aria-label="Main navigation">
-        <button class="nav-item active" data-view="overview"><span class="nav-icon">◫</span>Overview</button>
-        <button class="nav-item" data-view="data-center"><span class="nav-icon">▤</span>Data Center</button>
-        <div class="nav-label nav-label-spaced">CORE STATISTICS</div>
-        <button class="nav-item" data-view="gap"><span class="nav-icon">◇</span>Gap Statistics</button>
-        <button class="nav-item" data-view="liquidity"><span class="nav-icon">⌁</span>Liquidity</button>
-        <button class="nav-item" data-view="sessions"><span class="nav-icon">◷</span>Sessions</button>
-        <button class="nav-item" data-view="time"><span class="nav-icon">◴</span>Time Statistics</button>
-        <button class="nav-item" data-view="structure"><span class="nav-icon">⌗</span>Market Structure</button>
-        <button class="nav-item" data-view="daily-weekly"><span class="nav-icon">▥</span>Daily &amp; Weekly</button>
-        <button class="nav-item" data-view="liquidity-mss"><span class="nav-icon">⇢</span>Liquidity → MSS</button>
-        <div class="nav-label nav-label-spaced">FORECAST &amp; RESEARCH</div>
-        <button class="nav-item" data-view="forecast"><span class="nav-icon">✳</span>Forecast Lab<span class="nav-tag">HYBRID</span></button>
-        <button class="nav-item" data-view="research"><span class="nav-icon">⌘</span>Research &amp; Evaluation</button>
+  <div id="loginGate" class="login-gate hidden">
+    <div class="login-card panel">
+      <div class="brand-mark large">Q<span>·</span></div>
+      <div class="eyebrow">QUANTITATIVE RESEARCH TERMINAL</div>
+      <h1>ICT QuantLab</h1>
+      <p class="muted">Đăng nhập vào workspace riêng của bạn.</p>
+      <form id="loginForm" class="stack-form">
+        <label>Username<input id="loginUsername" autocomplete="username" required placeholder="admin"></label>
+        <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••••••"></label>
+        <button class="btn primary full" type="submit">Sign in <span>↗</span></button>
+      </form>
+      <div class="muted small" id="loginHint">Backend chưa được cấu hình? Mở phần API Setup trong màn hình này.</div>
+      <div class="login-api-row"><input id="loginApiBase" placeholder="https://your-api.onrender.com"><button id="saveLoginApi" class="btn secondary">Save API</button></div>
+      <div id="loginError" class="form-error"></div>
+    </div>
+  </div>
+
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">Q<span>·</span></div><div><strong>ICT QUANTLAB</strong><small>RESEARCH TERMINAL</small></div></div>
+      <div class="workspace-label">WORKSPACE <span class="live-dot"></span></div>
+      <nav class="nav-menu" aria-label="Main navigation">
+        <button class="nav-link active" data-view="overview"><span class="nav-icon">◫</span><span>Overview</span><kbd>01</kbd></button>
+        <button class="nav-link" data-view="data"><span class="nav-icon">▤</span><span>Data Center</span><kbd>02</kbd></button>
+        <div class="nav-caption">QUANT RESEARCH</div>
+        <button class="nav-link" data-view="statistics"><span class="nav-icon">▥</span><span>Market Statistics</span><kbd>03</kbd></button>
+        <button class="nav-link" data-view="advanced"><span class="nav-icon">⌘</span><span>Advanced ICT Lab</span><kbd>04</kbd></button>
+        <button class="nav-link" data-view="forecast"><span class="nav-icon">⌁</span><span>Forecast Lab</span><kbd>05</kbd></button>
+        <button class="nav-link" data-view="research"><span class="nav-icon">⚗</span><span>Research & Evaluation</span><kbd>06</kbd></button>
       </nav>
       <div class="sidebar-bottom">
-        <div class="integrity-box"><span class="integrity-dot"></span><div><b>Research integrity</b><small>No fabricated prices or forecasts.</small></div></div>
-        <div class="sidebar-version">ICT QUANTLAB <span>STATIC WEB EDITION</span></div>
+        <div class="connection-mini"><span class="status-led" id="sidebarApiLed"></span><div><strong id="sidebarApiState">API offline</strong><small id="sidebarApiText">Set backend URL</small></div><button id="testApiBtn" title="Test API">↻</button></div>
+        <button class="nav-link" data-view="settings"><span class="nav-icon">⚙</span><span>Settings</span></button>
+        <div class="user-row"><div class="avatar">Q</div><div><strong id="userLabel">Workspace</strong><small>Private instance</small></div><button id="logoutBtn" title="Sign out">⇥</button></div>
       </div>
     </aside>
 
     <main class="main-area">
       <header class="topbar">
-        <div class="topbar-left"><button class="mobile-menu" id="mobile-menu" aria-label="Open navigation">☰</button><div class="breadcrumb">ICT QUANTLAB <span>/</span> <b id="breadcrumb-current">OVERVIEW</b></div></div>
-        <div class="topbar-right"><span class="timezone-pill">◷ NEW YORK TIME</span><span class="connection-pill" id="connection-pill"><span class="status-dot"></span><span id="connection-label">API NOT CONFIGURED</span></span><button class="icon-button" id="open-settings" title="Settings">⚙</button></div>
+        <div class="breadcrumb"><span>ICT QUANTLAB</span><b>/</b><strong id="pageCrumb">OVERVIEW</strong></div>
+        <div class="topbar-right"><div class="market-clock"><span class="live-dot"></span><span>NEW YORK</span><strong id="nyClock">--:--:--</strong><small id="nyDate">---</small></div><div class="topbar-divider"></div><button class="icon-btn" id="quickSettings" title="Settings">⚙</button></div>
       </header>
 
-      <div class="content-wrap">
-        <section class="global-toolbar" aria-label="Global filters">
-          <div class="toolbar-title">RESEARCH FILTERS</div>
-          <label>SYMBOL<select id="global-symbol" disabled><option>No symbols loaded</option></select></label>
-          <label>TIMEFRAME<select id="global-timeframe"><option>M1</option><option>M5</option><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></label>
-          <label>FROM<input id="date-from" type="date"></label>
-          <label>TO<input id="date-to" type="date"></label>
-          <button class="button button-quiet" id="apply-filters" disabled>Apply filters</button>
+      <section class="global-toolbar">
+        <div class="toolbar-title"><span class="eyebrow">GLOBAL CONTEXT</span><strong>Market workspace</strong></div>
+        <div class="toolbar-controls">
+          <label class="compact-field"><span>SYMBOL</span><select id="globalSymbol"><option value="">No symbol</option></select></label>
+          <label class="compact-field"><span>TIMEFRAME</span><select id="globalTimeframe"><option>M1</option><option>M5</option><option>M15</option><option>M30</option><option>H1</option><option>H4</option><option>D1</option></select></label>
+          <label class="compact-field date-field"><span>FROM · NEW YORK</span><input type="datetime-local" id="globalStart"></label>
+          <label class="compact-field date-field"><span>TO · NEW YORK</span><input type="datetime-local" id="globalEnd"></label>
+          <button class="btn primary small-btn" id="loadHistoryBtn">Load M1 history <span>↗</span></button>
+        </div>
+      </section>
+
+      <div class="page-content">
+        <section class="view active" id="view-overview">
+          <div class="page-heading"><div><div class="eyebrow">SYSTEM OVERVIEW / 01</div><h1>Quantitative <span class="accent">workspace</span></h1><p>Observe market behaviour, validate ICT hypotheses and inspect probability — without fabricated metrics.</p></div><div class="heading-actions"><span class="pill muted-pill" id="dataStatusPill">NO MARKET DATA</span><button class="btn secondary" data-goto="data">Configure data source ↗</button></div></div>
+          <div class="metric-grid four">
+            <article class="metric-card"><div class="metric-label">LOADED M1 BARS <span>◷</span></div><div class="metric-value" id="ovBars">—</div><div class="metric-foot">Current browser session</div></article>
+            <article class="metric-card"><div class="metric-label">DATA QUALITY <span>◎</span></div><div class="metric-value" id="ovQuality">—</div><div class="metric-foot" id="ovQualityFoot">No candles inspected</div></article>
+            <article class="metric-card"><div class="metric-label">ICT EVENTS <span>⌁</span></div><div class="metric-value" id="ovEvents">—</div><div class="metric-foot">Run a statistics module</div></article>
+            <article class="metric-card"><div class="metric-label">FORECAST STATUS <span>◈</span></div><div class="metric-value compact-value" id="ovForecast">UNTRAINED</div><div class="metric-foot">No probability published yet</div></article>
+          </div>
+          <div class="content-grid overview-grid">
+            <article class="panel chart-panel"><div class="panel-header"><div><div class="eyebrow">PRICE ACTION</div><h2>Market chart <span class="muted" id="chartSymbol">—</span></h2></div><div class="chart-legend"><span><i class="legend-up"></i> Bullish</span><span><i class="legend-down"></i> Bearish</span></div></div><canvas id="priceChart" height="280"></canvas><div class="chart-empty" id="chartEmpty">Connect cTrader and load M1 history to render price action.</div><div class="chart-footer"><span id="chartRangeLabel">Waiting for data</span><span>Source: cTrader historical trendbars</span></div></article>
+            <article class="panel system-panel"><div class="panel-header"><div><div class="eyebrow">PIPELINE STATUS</div><h2>Research engines</h2></div><span class="pill muted-pill">6 ENGINES</span></div><div class="engine-list">
+              <div class="engine-row"><span class="engine-icon">▤</span><div><strong>Data Engine</strong><small>cTrader · M1 · RAM cache</small></div><span class="engine-state" id="engineData">IDLE</span></div>
+              <div class="engine-row"><span class="engine-icon">∑</span><div><strong>Processing Engine</strong><small>Validation · aggregation · NY time</small></div><span class="engine-state">READY</span></div>
+              <div class="engine-row"><span class="engine-icon">⌘</span><div><strong>ICT Event Engine</strong><small>Liquidity · structure · gaps</small></div><span class="engine-state" id="engineIct">IDLE</span></div>
+              <div class="engine-row"><span class="engine-icon">▥</span><div><strong>Statistics Engine</strong><small>7 core modules + advanced ICT</small></div><span class="engine-state" id="engineStats">IDLE</span></div>
+              <div class="engine-row"><span class="engine-icon">◈</span><div><strong>Forecast Engine</strong><small>Hybrid event + price scenarios</small></div><span class="engine-state" id="engineForecast">IDLE</span></div>
+              <div class="engine-row"><span class="engine-icon">⚗</span><div><strong>Evaluation Engine</strong><small>Walk-forward · Brier · calibration</small></div><span class="engine-state" id="engineEval">READY</span></div>
+            </div></article>
+          </div>
+          <div class="content-grid lower-grid"><article class="panel"><div class="panel-header"><div><div class="eyebrow">RESEARCH WORKFLOW</div><h2>Start here</h2></div></div><div class="workflow-list"><div><b>01</b><span><strong>Connect cTrader</strong><small>Save app credentials, approve read-only access and select an account.</small></span><button data-goto="data">Open →</button></div><div><b>02</b><span><strong>Load M1 history</strong><small>Choose a range; missing windows are fetched and previously loaded windows reused.</small></span><button data-goto="data">Open →</button></div><div><b>03</b><span><strong>Run statistics</strong><small>Inspect event records, sample size and confidence intervals.</small></span><button data-goto="statistics">Open →</button></div><div><b>04</b><span><strong>Evaluate forecast</strong><small>Historical scenario replay uses only information available at its forecast time.</small></span><button data-goto="forecast">Open →</button></div></div></article><article class="panel"><div class="panel-header"><div><div class="eyebrow">RESEARCH GUARDRAILS</div><h2>Integrity rules</h2></div><span class="pill green-pill">ENABLED</span></div><ul class="guardrail-list"><li><span>✓</span>No look-ahead in pivot confirmation and forecast features.</li><li><span>✓</span>OHLC integrity checks; suspect highs are excluded from analytics.</li><li><span>✓</span>Event probabilities expose sample size and Wilson 95% CI.</li><li><span>✓</span>Ambiguous TP/SL hits inside one M1 candle are flagged, not guessed.</li><li><span>✓</span>Forecast scenarios are mutually exclusive and sum to 100%.</li></ul></article></div>
         </section>
 
-        <div id="view-root" aria-live="polite"></div>
-        <footer class="page-footer"><span>ICT QUANTLAB · RESEARCH-FIRST PLATFORM</span><span>UTC STORAGE / NEW YORK DISPLAY · EST / EDT AWARE</span></footer>
+        <section class="view" id="view-data">
+          <div class="page-heading"><div><div class="eyebrow">DATA FOUNDATION / 02</div><h1>Data <span class="accent">Center</span></h1><p>Connect cTrader, discover broker symbols and load validated M1 history with incremental range caching.</p></div><span class="pill muted-pill" id="ctraderStatePill">NOT CONNECTED</span></div>
+          <div class="content-grid data-grid">
+            <article class="panel"><div class="panel-header"><div><div class="eyebrow">APPLICATION CREDENTIALS</div><h2>cTrader Open API</h2></div><span class="secure-label">⌑ ENCRYPTED SERVER STORAGE</span></div><div class="callout info-callout"><b>Read-only integration</b><span>Use scope <code>accounts</code>. QuantLab needs account and market-data access only; it does not place trades.</span></div>
+              <form id="ctraderConfigForm" class="form-grid">
+                <label class="span-2">Client ID<input id="ctraderClientId" required placeholder="Your cTrader Open API Client ID"></label>
+                <label class="span-2">Client Secret<div class="secret-input"><input id="ctraderClientSecret" type="password" autocomplete="new-password" placeholder="Paste secret (leave blank to keep saved secret)"><span id="secretSavedBadge" class="saved-badge hidden">SAVED</span></div><small class="field-help">Secret is encrypted on the API server and never sent back to this browser.</small></label>
+                <label class="span-2">Redirect URI<input id="ctraderRedirectUri" required placeholder="https://your-api.example.com/api/v1/ctrader/oauth/callback"><small class="field-help">Register this exact URL in the cTrader Open API application.</small></label>
+                <label>Preferred environment<select id="ctraderEnvironment"><option value="demo">Demo</option><option value="live">Live</option></select></label>
+                <label>Permission scope<select id="ctraderScope"><option value="accounts">accounts · read-only</option></select></label>
+                <div class="form-actions span-2"><button class="btn primary" type="submit">Save credentials <span>↗</span></button><button class="btn secondary" type="button" id="authorizeCTraderBtn" disabled>Authorize cTrader</button><span id="configSaveState" class="muted small"></span></div>
+              </form>
+              <div class="divider"></div><div class="subsection-title">AUTHENTICATION FLOW</div><div class="stepper"><div class="step done"><span>1</span><div><b>Application credentials</b><small>Saved encrypted in backend database</small></div></div><div class="step" id="oauthStep"><span>2</span><div><b>OAuth approval</b><small>Authorize your cTrader ID in Spotware page</small></div></div><div class="step" id="accountStep"><span>3</span><div><b>Account authorization</b><small>Choose an account and grant data access</small></div></div><div class="step" id="symbolStep"><span>4</span><div><b>Symbol discovery</b><small>Load all symbols available to selected account</small></div></div></div>
+            </article>
+            <article class="panel"><div class="panel-header"><div><div class="eyebrow">ACCOUNT & SYMBOL REGISTRY</div><h2>Trading account</h2></div><button class="btn secondary small-btn" id="refreshAccountsBtn">↻ Refresh</button></div><div class="account-box"><div class="account-identity"><div class="account-icon">◎</div><div><strong id="selectedAccountName">No account selected</strong><small id="selectedAccountMeta">Authorize cTrader to list accounts</small></div></div><label class="field-block">Available accounts<select id="accountSelect" disabled><option value="">No accounts available</option></select></label><button class="btn secondary full" id="selectAccountBtn" disabled>Use selected account</button></div><div class="divider"></div><div class="panel-header compact-panel-header"><div><div class="subsection-title">AVAILABLE SYMBOLS</div><small class="muted">Dynamic list from cTrader account</small></div><button id="refreshSymbolsBtn" class="btn secondary small-btn" disabled>Load symbols</button></div><input class="search-input" id="symbolSearch" placeholder="Search symbol name…" disabled><div class="symbol-list" id="symbolList"><div class="empty-state small-empty">Symbols will appear after account authorization.</div></div></article>
+          </div>
+          <article class="panel history-panel"><div class="panel-header"><div><div class="eyebrow">HISTORICAL MARKET DATA</div><h2>M1 data loader</h2></div><span class="pill muted-pill">SESSION RAM CACHE</span></div><div class="history-controls"><label>Selected symbol<select id="dataSymbol"><option value="">Select a symbol</option></select></label><label>Timeframe source<select disabled><option>M1 · source of truth</option></select></label><label>Start · New York<input type="datetime-local" id="dataStart"></label><label>End · New York<input type="datetime-local" id="dataEnd"></label><button class="btn primary" id="downloadM1Btn">Download / extend history ↗</button></div><div class="progress-wrap hidden" id="downloadProgress"><div class="progress-top"><span id="downloadProgressText">Fetching missing windows…</span><strong id="downloadProgressPercent">—</strong></div><div class="progress-track"><span id="downloadProgressBar"></span></div></div><div class="data-summary-grid"><div><small>Loaded candles</small><b id="dataBarCount">—</b></div><div><small>New candles fetched</small><b id="dataNewBars">—</b></div><div><small>Suspect highs</small><b id="dataSuspect">—</b></div><div><small>Loaded windows</small><b id="dataWindows">—</b></div></div><div class="data-note">M1 is the only provider source. M5/M15/M30/H1/H4/D1 are aggregated from M1. This browser run gets a new cache namespace on page reload; OHLC is never persisted to SQLite.</div></article>
+        </section>
+
+        <section class="view" id="view-statistics">
+          <div class="page-heading"><div><div class="eyebrow">CORE STATISTICS / 03</div><h1>Market <span class="accent">Statistics</span></h1><p>Seven predefined research modules. Run on the selected dataset and drill into the event records behind every result.</p></div><button class="btn primary" id="runStatsBtn">Run selected module ↗</button></div>
+          <div class="module-layout"><aside class="module-sidebar" id="statsModuleList"><button class="module-choice active" data-module="gaps"><b>01</b><span><strong>Gap Statistics</strong><small>NDOG · NWOG</small></span></button><button class="module-choice" data-module="liquidity"><b>02</b><span><strong>Liquidity Statistics</strong><small>Asia · PDH/PDL · PWH/PWL</small></span></button><button class="module-choice" data-module="sessions"><b>03</b><span><strong>Session Statistics</strong><small>Asia · London · NY AM/PM</small></span></button><button class="module-choice" data-module="time"><b>04</b><span><strong>Time Statistics</strong><small>Reversal · high/low timing</small></span></button><button class="module-choice" data-module="structure"><b>05</b><span><strong>Market Structure</strong><small>MSS · BOS · MFE/MAE · R</small></span></button><button class="module-choice" data-module="daily-weekly"><b>06</b><span><strong>Daily & Weekly</strong><small>Direction · range · extremes</small></span></button><button class="module-choice" data-module="liquidity-mss"><b>07</b><span><strong>Liquidity → MSS</strong><small>Conditional probability</small></span></button></aside><div class="module-main"><article class="panel"><div class="panel-header"><div><div class="eyebrow">SELECTED MODULE</div><h2 id="statsTitle">Gap Statistics</h2><p class="muted" id="statsDescription">NDOG/NWOG gap formation, progressive fill thresholds and fill timing.</p></div><span class="pill muted-pill" id="statsSample">NO SAMPLE</span></div><div id="statsMetrics" class="metric-grid three"><div class="metric-placeholder">Load M1 history and run this module to calculate results.</div></div><div class="statistics-visualization"><div class="panel-header"><div><div class="eyebrow">DISTRIBUTION VIEW</div><h3>Historical pattern visualization</h3></div><span class="pill muted-pill" id="statsVizState">WAITING FOR DATA</span></div><canvas id="statsChart" height="190"></canvas><div class="table-foot" id="statsVizCaption">Run a module to plot the distribution of its returned records.</div></div><div class="divider"></div><div class="panel-header"><div><div class="eyebrow">RECORD INSPECTION</div><h3>Historical event records</h3></div><div class="table-tools"><input id="recordSearch" placeholder="Filter records…"><button class="btn secondary small-btn" id="exportRecordsBtn">Export CSV ↓</button></div></div><div class="table-wrap"><table class="data-table"><thead id="statsTableHead"><tr><th>TIME</th><th>TYPE</th><th>DETAIL</th><th>VALUE</th></tr></thead><tbody id="statsTableBody"><tr><td colspan="4" class="empty-cell">No records. Run statistics after loading history.</td></tr></tbody></table></div><div class="table-foot" id="statsTableFoot">Statistics are calculated from source data; no demo numbers are prefilled.</div><div class="divider"></div><div class="panel-header"><div><div class="eyebrow">PERIOD COMPARISON</div><h3>Compare two historical windows</h3><p class="muted">Both windows are measured from the currently loaded dataset; level detection still has full cached context.</p></div></div><div class="compare-periods"><div><b>PERIOD A</b><label>From<input type="datetime-local" id="compareAStart"></label><label>To<input type="datetime-local" id="compareAEnd"></label></div><div><b>PERIOD B</b><label>From<input type="datetime-local" id="compareBStart"></label><label>To<input type="datetime-local" id="compareBEnd"></label></div><button class="btn secondary" id="comparePeriodsBtn">Compare periods ↔</button></div><div id="compareOutput" class="compare-output"><div class="empty-state small-empty">Choose two windows and run a comparison.</div></div></article></div></div>
+          <div class="filter-strip panel"><div><div class="eyebrow">GLOBAL FILTERS</div><small>Filters apply to displayed records while event detection keeps required upstream context.</small></div><label>Session<select id="filterSession"><option value="">All sessions</option><option>Asia</option><option>London</option><option>NY AM</option><option>London Close</option><option>NY PM</option></select></label><label>Direction<select id="filterDirection"><option value="">All directions</option><option value="bullish">Bullish</option><option value="bearish">Bearish</option></select></label><label>Day<select id="filterDay"><option value="">All weekdays</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select></label><label>Daily bias<select id="filterDailyBias"><option value="">Any bias</option><option value="bullish">Bullish</option><option value="bearish">Bearish</option><option value="flat">Flat</option></select></label><label>Volatility<select id="filterVolatility"><option value="">Any regime</option><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Month<input id="filterMonth" type="number" min="1" max="12" placeholder="All"></label><label>Year<input id="filterYear" type="number" min="2000" max="2100" placeholder="All"></label></div>
+        </section>
+
+        <section class="view" id="view-advanced">
+          <div class="page-heading"><div><div class="eyebrow">ICT CONCEPT RESEARCH / 04</div><h1>Advanced <span class="accent">ICT Lab</span></h1><p>Extended event detectors, market profile context and multi-symbol divergence.</p></div><button class="btn primary" id="runAdvancedBtn">Run advanced scan ↗</button></div>
+          <div class="advanced-grid" id="advancedFeatureGrid"><article class="feature-card"><span>01 / IMBALANCE</span><h3>Fair Value Gap</h3><p>3-candle imbalance, 50% mitigation and full fill lifecycle. This is an advanced module, not part of Phase 1 core.</p></article><article class="feature-card"><span>02 / LIQUIDITY POOLS</span><h3>Equal Highs / Lows</h3><p>Confirmed swing pairs within an ATR-scaled tolerance.</p></article><article class="feature-card"><span>03 / INSTITUTIONAL ZONES</span><h3>Order Block / Breaker</h3><p>Last opposing candle before displacement and structure break; track mitigation and invalidation.</p></article><article class="feature-card"><span>04 / RANGE LOCATION</span><h3>Premium / Discount</h3><p>Price location relative to an active dealing range and equilibrium.</p></article><article class="feature-card"><span>05 / VOLATILITY</span><h3>ADR 5 / 20 / 50</h3><p>Average daily range context and realized expansion.</p></article><article class="feature-card"><span>06 / SESSION MODEL</span><h3>PO3 / AMD / Judas</h3><p>Asia accumulation followed by liquidity manipulation and potential distribution.</p></article><article class="feature-card"><span>07 / TIME WINDOW</span><h3>Silver Bullet</h3><p>FVG formations in configurable New York time windows: 03–04, 10–11 and 14–15.</p></article><article class="feature-card"><span>08 / DEALER RANGE</span><h3>CBDR / IPDA</h3><p>CBDR session range and prior 20/40/60 day range context.</p></article><article class="feature-card"><span>09 / DIVERGENCE</span><h3>SMT Divergence</h3><p>Compare aligned M1 swings across two symbols; no SMT inference from one symbol alone.</p></article><article class="feature-card"><span>10 / CONFLUENCE</span><h3>Confluence Engine</h3><p>Rule-based evidence score with component transparency; explicitly not presented as probability.</p></article></div>
+          <article class="panel advanced-results"><div class="panel-header"><div><div class="eyebrow">ADVANCED SCAN OUTPUT</div><h2>Detected ICT structures</h2></div><span class="pill muted-pill" id="advancedCount">NOT RUN</span></div><div class="metric-grid four" id="advancedMetrics"><div class="metric-placeholder">Run an advanced scan after M1 history is loaded.</div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>TIME</th><th>EVENT</th><th>DIRECTION</th><th>ZONE / PRICE</th><th>STATE</th></tr></thead><tbody id="advancedTableBody"><tr><td colspan="5" class="empty-cell">No scan output.</td></tr></tbody></table></div></article>
+          <article class="panel smt-panel"><div class="panel-header"><div><div class="eyebrow">CROSS-MARKET COMPARISON</div><h2>SMT divergence scanner</h2></div></div><div class="smt-controls"><label>Primary symbol<select id="smtPrimary"><option value="">Select primary</option></select></label><label>Comparison symbol<select id="smtSecondary"><option value="">Select comparison</option></select></label><button class="btn secondary" id="runSmtBtn">Compare aligned swings</button></div><div id="smtResult" class="empty-state small-empty">Download overlapping M1 date ranges for both symbols first.</div></article>
+        </section>
+
+        <section class="view" id="view-forecast">
+          <div class="page-heading"><div><div class="eyebrow">HYBRID PREDICTION / 05</div><h1>Forecast <span class="accent">Lab</span></h1><p>Event and price scenarios from historical analogs. Forecasts are withheld when the sample is too small.</p></div><div class="forecast-mode"><button class="mode-btn active" data-forecast-mode="live">LIVE</button><button class="mode-btn" data-forecast-mode="historical">HISTORICAL REPLAY</button></div></div>
+          <div class="panel forecast-run-panel"><div class="forecast-run-controls"><label>Forecast horizon<select id="forecastHorizon"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60" selected>60 minutes</option><option value="240">4 hours</option><option value="480">8 hours</option><option value="1440">1 day</option></select><small id="forecastHorizonHelp" class="field-help">Horizon must be an exact multiple of the selected timeframe.</small></label><label id="forecastAsOfWrap" class="hidden">Historical as-of · New York<input id="forecastAsOf" type="datetime-local"></label><div class="forecast-explainer"><b id="forecastModeTitle">Live context forecast</b><small id="forecastModeDescription">Uses the latest loaded M1 bar and historical examples that existed before that point.</small></div><button class="btn primary" id="runForecastBtn">Generate forecast ↗</button><label class="checkline"><input id="forecastAutoRefresh" type="checkbox"> Auto-refresh M1 every 60s</label><small id="forecastLiveStatus" class="muted">POLLING OFF</small><small id="forecastLiveNote" class="muted"></small></div></div>
+          <div id="forecastOutput" class="forecast-output"><article class="panel forecast-empty"><div class="empty-orbit">◈</div><h2>Forecast engine is waiting for evidence</h2><p>Load a sufficiently long historical dataset. The baseline requires 120 clean M1 bars and at least 30 matching analogs before publishing probabilities.</p></article></div>
+          <div class="content-grid forecast-lower"><article class="panel"><div class="panel-header"><div><div class="eyebrow">MODEL STACK</div><h2>Hybrid architecture</h2></div></div><div class="model-stack"><div><span class="model-tag">BASELINE</span><b>Conditional probability / historical analogs</b><small>Auditable benchmark and fallback.</small></div><div><span class="model-tag">REGIME</span><b>Markov / volatility regime</b><small>Context segmentation; HMM can be added when a sufficient sample exists.</small></div><div><span class="model-tag">VOLATILITY</span><b>GARCH / realized volatility</b><small>Volatility forecast and regime comparison; optional fitting stage.</small></div><div><span class="model-tag">EVENT TIME</span><b>Survival analysis</b><small>Time-to-sweep / time-to-MSS modelling.</small></div><div><span class="model-tag">ML</span><b>Logistic · XGBoost · Quantile</b><small>Use only after walk-forward comparison with the baseline.</small></div><div><span class="model-tag">SEQUENCE</span><b>GRU / LSTM / Transformer</b><small>Research candidates, not enabled by default.</small></div></div></article><article class="panel"><div class="panel-header"><div><div class="eyebrow">FORECAST CONTRACT</div><h2>What is published?</h2></div></div><ul class="guardrail-list"><li><span>✓</span>Mutually exclusive scenario probabilities sum to 100%.</li><li><span>✓</span>Price ranges use empirical quantiles of historical analog returns.</li><li><span>✓</span>Event forecast separates buy-side and sell-side sweep.</li><li><span>✓</span>Insufficient sample means no probability is published.</li><li><span>✓</span>Historical replay trains only on data before its as-of timestamp.</li></ul></article></div>
+        </section>
+
+        <section class="view" id="view-research">
+          <div class="page-heading"><div><div class="eyebrow">MODEL VALIDATION / 06</div><h1>Research & <span class="accent">Evaluation</span></h1><p>Track forecasts separately from transient OHLC cache. Compare models out-of-sample and preserve audit trails.</p></div><button class="btn secondary" id="refreshEvaluationBtn">Refresh evaluation ↻</button></div>
+          <div class="metric-grid four" id="evaluationMetrics"><div class="metric-card"><div class="metric-label">EVALUATED FORECASTS</div><div class="metric-value">—</div><div class="metric-foot">No evaluation data</div></div><div class="metric-card"><div class="metric-label">BRIER SCORE</div><div class="metric-value">—</div><div class="metric-foot">Lower is better</div></div><div class="metric-card"><div class="metric-label">TOP SCENARIO ACCURACY</div><div class="metric-value">—</div><div class="metric-foot">Argmax baseline</div></div><div class="metric-card"><div class="metric-label">MODEL VERSION</div><div class="metric-value compact-value">—</div><div class="metric-foot">Versioned forecast records</div></div></div>
+          <div class="content-grid forecast-lower" id="evaluationDiagnostics">
+            <article class="panel"><div class="panel-header"><div><div class="eyebrow">CLASSIFICATION QUALITY</div><h2>Precision / Recall</h2></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>SCENARIO</th><th>PRECISION</th><th>RECALL</th><th>SUPPORT</th></tr></thead><tbody id="evaluationClassTable"><tr><td colspan="4" class="empty-cell">No evaluated forecasts yet.</td></tr></tbody></table></div></article>
+            <article class="panel"><div class="panel-header"><div><div class="eyebrow">PROBABILITY QUALITY</div><h2>Top-class reliability</h2></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>CONFIDENCE BIN</th><th>COUNT</th><th>MEAN CONFIDENCE</th><th>ACCURACY</th></tr></thead><tbody id="evaluationReliabilityTable"><tr><td colspan="4" class="empty-cell">No evaluated forecasts yet.</td></tr></tbody></table></div><p class="field-help">Diagnostic bins compare the winning scenario confidence with its observed accuracy; this is not full class-wise calibration.</p></article>
+          </div>
+          <article class="panel"><div class="panel-header"><div><div class="eyebrow">ERROR ANALYSIS</div><h2>Confusion matrix</h2></div><span class="pill muted-pill">ROWS = ACTUAL · COLUMNS = PREDICTED</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>ACTUAL \ PREDICTED</th><th>BULLISH EXP.</th><th>BEARISH EXP.</th><th>CONSOLIDATION</th></tr></thead><tbody id="evaluationConfusionTable"><tr><td colspan="4" class="empty-cell">No evaluated forecasts yet.</td></tr></tbody></table></div><p class="field-help">Repeated overlapping forecasts are statistically dependent. Treat these diagnostics as descriptive until results are clustered by date/session and validated walk-forward.</p></article>
+          <article class="panel"><div class="panel-header"><div><div class="eyebrow">PREDICTION AUDIT</div><h2>Forecast history</h2></div><span class="pill muted-pill">LAST 500 RUNS</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>CREATED</th><th>SYMBOL</th><th>AS-OF</th><th>MODEL</th><th>SAMPLE</th><th>STATUS</th><th>OUTCOME</th></tr></thead><tbody id="evaluationTable"><tr><td colspan="7" class="empty-cell">No forecast records have been saved.</td></tr></tbody></table></div></article>
+          <article class="panel notes-panel"><div class="panel-header"><div><div class="eyebrow">RESEARCH JOURNAL</div><h2>Research notes</h2></div><button class="btn secondary small-btn" id="newNoteBtn">+ New note</button></div><div class="notes-layout"><div id="notesList" class="notes-list"><div class="empty-state small-empty">No research notes yet.</div></div><form id="noteForm" class="note-form hidden"><label>Title<input id="noteTitle" required maxlength="160" placeholder="Hypothesis / finding"></label><label>Notes<textarea id="noteBody" rows="5" required placeholder="Describe setup, sample, methodology and interpretation…"></textarea></label><label>Tags<input id="noteTags" placeholder="liquidity, NY AM, MSS"></label><button class="btn primary" type="submit">Save note</button></form></div></article>
+        </section>
+
+        <section class="view" id="view-settings">
+          <div class="page-heading"><div><div class="eyebrow">WORKSPACE CONFIGURATION / 07</div><h1>System <span class="accent">Settings</span></h1><p>Connect your hosted backend and define the time/session assumptions used by all research engines.</p></div></div>
+          <div class="content-grid settings-grid"><article class="panel"><div class="panel-header"><div><div class="eyebrow">API CONNECTIVITY</div><h2>Backend endpoint</h2></div><span class="pill muted-pill" id="settingsApiStatus">NOT TESTED</span></div><label class="field-block">FastAPI base URL<input id="apiBaseInput" placeholder="https://your-api.onrender.com"></label><p class="field-help">The URL is public configuration, not a secret. It is saved in this browser's localStorage.</p><div class="form-actions"><button class="btn primary" id="saveApiBtn">Save API URL</button><button class="btn secondary" id="settingsTestApiBtn">Test connection</button></div><div id="apiTestResult" class="small muted"></div></article><article class="panel"><div class="panel-header"><div><div class="eyebrow">TIME & SESSION PROFILE</div><h2>New York market clock</h2></div><span class="pill green-pill">DST AWARE</span></div><div class="setting-row"><div><b>Display timezone</b><small>America/New_York · automatic EST / EDT</small></div><strong>LOCKED</strong></div><label class="field-block">Trading day starts at (New York hour)<select id="dayStartHour"><option value="0">00:00</option><option value="17" selected>17:00 · Forex default</option><option value="18">18:00</option></select></label><div class="session-profile editable-session-profile">
+              <label>Asia <span>Start</span><input type="time" id="sessionAsiaStart" value="20:00"><span>End</span><input type="time" id="sessionAsiaEnd" value="00:00"></label>
+              <label>London <span>Start</span><input type="time" id="sessionLondonStart" value="02:00"><span>End</span><input type="time" id="sessionLondonEnd" value="05:00"></label>
+              <label>NY AM <span>Start</span><input type="time" id="sessionNyAmStart" value="07:00"><span>End</span><input type="time" id="sessionNyAmEnd" value="10:00"></label>
+              <label>London Close <span>Start</span><input type="time" id="sessionLondonCloseStart" value="10:00"><span>End</span><input type="time" id="sessionLondonCloseEnd" value="12:00"></label>
+              <label>NY PM <span>Start</span><input type="time" id="sessionNyPmStart" value="13:00"><span>End</span><input type="time" id="sessionNyPmEnd" value="16:00"></label>
+              <button class="btn secondary small-btn" id="saveSessionProfileBtn">Save session profile</button>
+              <small>Workspace-wide default in America/New_York. All times follow New York DST. Asia can cross midnight. Session presets should be reviewed per instrument and broker.</small>
+            </div></article></div>
+          <article class="panel deployment-panel"><div class="panel-header"><div><div class="eyebrow">DEPLOYMENT MAP</div><h2>GitHub Pages + FastAPI</h2></div></div><div class="deployment-flow"><div><b>01</b><strong>GitHub Pages</strong><small>index.html · assets/*.css · assets/*.js</small><span class="pill green-pill">STATIC FRONTEND</span></div><i>→</i><div><b>02</b><strong>FastAPI server</strong><small>OAuth · cTrader Protobuf · encrypted DB</small><span class="pill blue-pill">PRIVATE BACKEND</span></div><i>→</i><div><b>03</b><strong>cTrader Open API</strong><small>Accounts · symbols · historical M1</small><span class="pill muted-pill">DATA PROVIDER</span></div></div><div class="callout warning-callout"><b>Deployment requirement</b><span>Use HTTPS on the backend, a persistent volume for SQLite, stable encryption/session keys, exact CORS origin and the exact cTrader callback URL. Never commit `.env` or real credentials to GitHub.</span></div></article>
+        </section>
       </div>
+      <footer class="app-footer"><span>ICT QUANTLAB <b>·</b> RESEARCH NOT EXECUTION</span><span>All displayed times: America/New_York <b>·</b> Source timestamps normalized to UTC</span><span id="footerVersion">v1.0.0 · HTML / JS</span></footer>
     </main>
   </div>
-
-  <div class="modal-backdrop hidden" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
-    <div class="modal-card">
-      <button class="modal-close" data-close-modal aria-label="Close">×</button>
-      <div class="modal-kicker">PRIVATE WORKSPACE</div><h2 id="login-title">Backend sign in</h2>
-      <p class="muted">Đăng nhập vào API để lưu credentials cTrader an toàn ở server.</p>
-      <form id="login-form" class="form-stack">
-        <label>Username<input id="login-username" autocomplete="username" required value="admin"></label>
-        <label>Password<input id="login-password" type="password" autocomplete="current-password" required></label>
-        <div class="form-error" id="login-error"></div>
-        <button class="button button-primary" type="submit" id="login-submit">Sign in to backend</button>
-      </form>
-    </div>
+  <div class="modal hidden" id="recordModal" role="dialog" aria-modal="true" aria-labelledby="recordModalTitle">
+    <div class="modal-card panel"><div class="panel-header"><div><div class="eyebrow">EVENT AUDIT / RAW RECORD</div><h2 id="recordModalTitle">Research record</h2></div><button class="btn secondary small-btn" id="recordModalClose" type="button" aria-label="Close record details">Close ✕</button></div><pre id="recordModalBody" class="record-json"></pre></div>
   </div>
-  <div class="toast" id="toast" role="status"></div>
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  <script src="assets/app.js" defer></script>
 </body>
 </html>

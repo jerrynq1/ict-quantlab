@@ -1,65 +1,77 @@
-import base64
 import hashlib
 import hmac
+import secrets
 import time
 from cryptography.fernet import Fernet, InvalidToken
-from fastapi import HTTPException, Request, status
-from app.settings import settings
+from fastapi import Depends, HTTPException, Header
+from app.config import settings
+from app.db import db
 
-SESSION_TTL = 8 * 60 * 60
 
-def cipher() -> Fernet:
+def _fernet() -> Fernet:
     if not settings.encryption_key:
-        raise HTTPException(503, "ICTQL_ENCRYPTION_KEY is not configured.")
+        raise RuntimeError("ICTQL_ENCRYPTION_KEY is not configured")
     try:
-        return Fernet(settings.encryption_key.encode())
+        key = settings.encryption_key.encode("utf-8")
+        return Fernet(key)
     except Exception as exc:
-        raise HTTPException(503, "ICTQL_ENCRYPTION_KEY is invalid.") from exc
+        raise RuntimeError("ICTQL_ENCRYPTION_KEY must be a valid Fernet key") from exc
 
-def encrypt_secret(value: str) -> str:
-    return cipher().encrypt(value.encode()).decode()
 
-def decrypt_secret(value: str) -> str:
+def encrypt(value: str) -> str:
+    return _fernet().encrypt(value.encode("utf-8")).decode("ascii")
+
+
+def decrypt(value: str) -> str:
     try:
-        return cipher().decrypt(value.encode()).decode()
+        return _fernet().decrypt(value.encode("ascii")).decode("utf-8")
     except InvalidToken as exc:
-        raise HTTPException(503, "Cannot decrypt saved credential; verify encryption key.") from exc
+        raise RuntimeError("Unable to decrypt stored cTrader credentials. Check encryption key continuity.") from exc
 
-def signature(payload: str) -> str:
+
+def hash_token(token: str) -> str:
     if not settings.session_secret:
-        raise HTTPException(503, "ICTQL_SESSION_SECRET is not configured.")
-    raw = hmac.new(settings.session_secret.encode(), payload.encode(), hashlib.sha256).digest()
-    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+        raise RuntimeError("ICTQL_SESSION_SECRET is not configured; refusing to issue or verify sessions")
+    pepper = settings.session_secret.encode("utf-8")
+    return hmac.new(pepper, token.encode("utf-8"), hashlib.sha256).hexdigest()
 
-def create_session(username: str) -> str:
-    payload = f"{username}:{int(time.time()) + SESSION_TTL}"
-    return payload + "." + signature(payload)
 
-def valid_session(token: str | None) -> bool:
-    if not token or "." not in token:
-        return False
-    payload, sig = token.rsplit(".", 1)
-    try:
-        username, expiry_text = payload.rsplit(":", 1)
-        expiry = int(expiry_text)
-    except ValueError:
-        return False
-    return bool(username) and expiry >= int(time.time()) and hmac.compare_digest(sig, signature(payload))
+def issue_session() -> str:
+    token = secrets.token_urlsafe(48)
+    expires = int(time.time()) + settings.session_ttl_hours * 3600
+    with db() as conn:
+        conn.execute("INSERT INTO sessions(token_hash, expires_at) VALUES (?, ?)", (hash_token(token), expires))
+    return token
 
-def bearer_token(request: Request) -> str | None:
-    value = request.headers.get("authorization", "")
-    scheme, _, token = value.partition(" ")
-    return token.strip() if scheme.lower() == "bearer" and token.strip() else None
 
-def require_workspace(request: Request) -> str:
-    token = bearer_token(request)
-    if not valid_session(token):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Session expired. Please sign in again.")
-    return token.split(":", 1)[0]
+def revoke_session(token: str) -> None:
+    with db() as conn:
+        conn.execute("DELETE FROM sessions WHERE token_hash = ?", (hash_token(token),))
+
+
+def authenticate_token(token: str) -> bool:
+    with db() as conn:
+        row = conn.execute("SELECT expires_at FROM sessions WHERE token_hash = ?", (hash_token(token),)).fetchone()
+        if not row:
+            return False
+        if int(row["expires_at"]) < int(time.time()):
+            conn.execute("DELETE FROM sessions WHERE token_hash = ?", (hash_token(token),))
+            return False
+        return True
+
+
+async def require_auth(authorization: str | None = Header(default=None)) -> str:
+    if not settings.session_secret:
+        raise HTTPException(status_code=503, detail="Backend authentication is not configured")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    token = authorization.removeprefix("Bearer ").strip()
+    if not authenticate_token(token):
+        raise HTTPException(status_code=401, detail="Session expired or invalid")
+    return token
+
 
 def verify_admin(username: str, password: str) -> bool:
-    return (
-        bool(settings.admin_username and settings.admin_password)
-        and hmac.compare_digest(username, settings.admin_username)
-        and hmac.compare_digest(password, settings.admin_password)
-    )
+    if not settings.admin_password:
+        return False
+    return hmac.compare_digest(username, settings.admin_username) and hmac.compare_digest(password, settings.admin_password)
